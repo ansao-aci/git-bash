@@ -1,0 +1,3 @@
+Cd to underlay file system of the container ciscoaci_opflex_agent
+
+cd `docker inspect ciscoaci_opflex_agent | grep merged | awk '{print$2}' | cut -d '"' -f 2`
