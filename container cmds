@@ -3,3 +3,8 @@ Cd to underlay file system of the container ciscoaci_opflex_agent
 cd `docker inspect ciscoaci_opflex_agent | grep merged | awk '{print$2}' | cut -d '"' -f 2`
 
 cd `docker inspect ciscoaci_aim | grep merged | awk '{print$2}' | cut -d '"' -f 2`
+
+Inspect the
+              /etc/aim/aim.conf             /etc/aim/aimctl.conf
+              
+gbp-validate --norepair --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/ml2_conf.ini
