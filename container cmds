@@ -6,6 +6,9 @@ cd `docker inspect ciscoaci_aim | grep merged | awk '{print$2}' | cut -d '"' -f 
 
 cd `docker inspect neutron_api | grep merged | awk '{print$2}' | cut -d '"' -f 2`
 
+gbp --os-username admin --os-password 2867a68377839edd02a186c8720076ea81c7e8e0 
+--os-project-name a-os-project-domain-name 'Default' --os-auth-url http://192.168.24.1:5000/ --os-user-domain-name 'Default'
+
 Inspect the
               /etc/aim/aim.conf             /etc/aim/aimctl.conf
     
