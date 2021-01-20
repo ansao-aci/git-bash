@@ -4,7 +4,112 @@ cd `docker inspect ciscoaci_opflex_agent | grep merged | awk '{print$2}' | cut -
 
 cd `docker inspect ciscoaci_aim | grep merged | awk '{print$2}' | cut -d '"' -f 2`
 
+cd `docker inspect neutron_api | grep merged | awk '{print$2}' | cut -d '"' -f 2`
+
 Inspect the
               /etc/aim/aim.conf             /etc/aim/aimctl.conf
-              
+    
+Works under only neutron_api container   and ciscoaci_opflex_agent containers.
+Does not work inside cisciaci_aim container.  
 gbp-validate --norepair --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/ml2_conf.ini
+
+
+#
+add qos on group_policy extension_driver.
+
+ML2 networking model:
+Cisco ACI OpenStack plug-in leverages Cisco APIC to implement OpenStack tenant networking and security services. To
+do so, it maps Neutron concepts such as networks, subnets, and routers to Cisco ACI concepts such as EPGs, bridge
+domains and contracts.
+
+project  --> tenant + VRF
+network --> epg + bd
+subnet --> subnet
+Router --> contract (consumed and provided by networks connected to the neutron network)
+(Contract is defined with a filter to allow any IP traffic.
+Policy enforcement is configured with security groups.)
+
+security groups --> host protection policies
+(It is implemented as stateful firewall rules in OVS.)
+
+All the BD and EPG corresponding to each neutron network in a project is associated with
+the VRF created when a project is created. 
+
+GBP networking model:
+GBP model of openstack provides an intent-driven declarative policy model
+that aims to abstract application segmentation from  networking layer.
+
+GBP abstractions of openstack is closely aligned with declarative policy model used in Cisco Apic.
+
+project --> tenant and application profile
+L3 policy --> VRF
+L2 policy --> BD and associated subnet
+policy group --> EPG
+policy ruleset --> contracts (implemented as stateful firewall rules in OVS)
+
+gbp offers policy api through multiple openstack interfaces:
+1. openstack-dashboard-gbp
+2. openstack-heat-gbp
+3. openstack-neutron-gbp
+
+These interfaces are installed with cisco aci plug-in. 
+GBP was designed to act as a layer on top of neutron. 
+
+While it is possible to use OpenStack security groups as in the ML2 model, 
+with GBP you can also control Cisco ACI contracts and provide or consume those by policy groups.
+
+GBP Policy Rulesets are enforced on the OpenStack nodes as OpenFlow rules programmed on OVS (when using OpFlexovs), 
+but also on the Cisco ACI leaf switches as if they were standard Cisco ACI contracts
+
+policy target --> Policy target is an individual network endpoint (generally a
+NIC). In other words, this is a basic addressable unit in the
+architecture.
+
+policy group -->  
+1. Policy targets with the same properties are organized into policy groups.
+2. A policy group is the fundamental primitive of GBP. 
+3. Policy groups offer an infrastructure-agnostic grouping construct without specifying any network semantics in the same way as a broadcast
+4. Each group models its dependencies by declaring the rule sets that it provides to groups as well as rule sets that it consumes.
+
+policy classifier --> 
+A means of filtering network traffic, including protocol, port range, and direction (in, out, or bidirectional). 
+
+policy action -->
+Action to be taken when a rule is applied. (allow ,redirect)
+
+Policy rules --> classifiers paired with actions
+
+policy rule set --> contains several policy rules. Can be nested via parent-child relationship.
+
+
+
+
+
+
+
+OpenStack administrator could define a subset of OpenStack projects using the ML2 Neutron model, and another set of
+projects using the GBP model. A single project should not mix ML2 and GBP configurations.
+
+
+
+APIC Integration Database and APIC Integration
+Manager (AIM) introduced as central point of
+storing plugin configuration.
+• AIM uses the OpenStack database.
+• AIM continuously synchronizes with APIC using
+APIC Integration Daemon (AID).
+• Group-Based Policies are mapped into Neutron API
+and then AIM. Neutron APIs are mapped to AIM
+directly. 
+
+document which talks about config rendering in detail:
+https://docs.google.com/document/d/134P7TJdiIfjPWbmstSTY4vp9E6oRYTFs64ON3thFxhI/edit#
+
+unified plug-in migration:
+https://www.cisco.com/c/en/us/td/docs/switches/datacenter/aci/apic/sw/4-x/openstack/b-ACI-OpenStack-Unified-Plugin-Migration.pdf
+
+gbp-validate original commit:
+https://opendev.org/x/group-based-policy/commit/9b7b7592210b1d44ee4991b0b23f17bbdb5091d0
+
+
+  
