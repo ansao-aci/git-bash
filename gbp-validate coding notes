@@ -1,0 +1,4 @@
+AIM resources expected for neutron resources: 
+
+Neutron                  
+Static resource --> common tenant,unrouted vrf, any_filter, default arp dhcp security group rules
